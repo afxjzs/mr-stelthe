@@ -11,10 +11,15 @@ const InputForm = ({
 }) => {
 	const [userInput, setUserInput] = useState("")
 	const [modelName, setModelName] = useState("text-davinci-003")
+	const [loading, setLoading] = useState(false)
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
+		setLoading(true)
+		setResponse("Asking...")
 		const response = await sendRequest(userInput, modelName)
+
+		setLoading(false)
 		updateModelName(modelName)
 		setFullResponse(response)
 		if (response.error) {
@@ -49,9 +54,9 @@ const InputForm = ({
 					className="w-full rounded border bg-gray-50 px-3 py-2 text-gray-800 outline-none ring-indigo-300 transition duration-100 focus:ring"
 				>
 					<option value="text-davinci-003">Davinci Codex</option>
-					<option value="curie-codex">Curie Codex</option>
-					<option value="babbage-codex">Babbage Codex</option>
-					<option value="ada-codex">Ada Codex</option>
+					<option value="text-curie-001">Curie Codex</option>
+					<option value="text-babbage-001">Babbage Codex</option>
+					<option value="text-ada-001">Ada Codex</option>
 				</select>
 
 				<textarea
@@ -64,8 +69,17 @@ const InputForm = ({
 				<button
 					type="submit"
 					className="flex sm:inline-flex justify-center items-center bg-gradient-to-tr from-indigo-500 to-purple-400 hover:from-indigo-600 hover:to-purple-500 active:from-indigo-700 active:to-purple-600 focus-visible:ring ring-indigo-300 text-white font-semibold text-center rounded-md outline-none transition duration-100 px-5 py-2"
+					disabled={loading}
 				>
-					Ask ChatGPT
+					{loading ? (
+						<img
+							src={`${process.env.PUBLIC_URL}/spinner.svg`}
+							alt="loading..."
+							className="animate-spin inline w-4 h4"
+						/>
+					) : (
+						"Ask Mr. STELTHē"
+					)}
 				</button>
 			</div>
 		</form>
