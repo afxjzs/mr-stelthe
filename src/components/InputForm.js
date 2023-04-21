@@ -2,6 +2,9 @@
 
 import React, { useState } from "react"
 import { sendRequest } from "../utils/api"
+import { cleanResponse } from "../utils/responseUtils"
+import { useMutation } from "@apollo/client"
+import gql from "graphql-tag"
 
 const InputForm = ({
 	setResponse,
@@ -12,6 +15,31 @@ const InputForm = ({
 	const [userInput, setUserInput] = useState("")
 	const [modelName, setModelName] = useState("text-davinci-003")
 	const [loading, setLoading] = useState(false)
+
+	const CREATE_REQUEST_HISTORY = gql`
+		mutation CreateRequestHistory(
+			$prompt: String!
+			$response: String!
+			$tokensUsed: Int!
+			$modelName: String!
+		) {
+			createRequestHistory(
+				prompt: $prompt
+				response: $response
+				tokensUsed: $tokensUsed
+				modelName: $modelName
+			) {
+				id
+				createdAt
+				prompt
+				response
+				tokensUsed
+				modelName
+			}
+		}
+	`
+
+	const [createRequestHistory] = useMutation(CREATE_REQUEST_HISTORY)
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
@@ -28,11 +56,42 @@ const InputForm = ({
 			setTokenCount(0)
 		} else {
 			const choice = response.choices[0]
+			const cleanedResponse = cleanResponse(choice.text)
 			setResponse(choice.text)
 			setTokenCount(
 				response.usage ? response.usage.total_tokens : response.usage_tokens
 			)
+
+			// Save request history to the database
+			try {
+				const { data, errors } = await createRequestHistory({
+					variables: {
+						prompt: userInput,
+						response: cleanedResponse,
+						tokensUsed: response.usage
+							? response.usage.total_tokens
+							: response.usage_tokens,
+						modelName,
+					},
+				})
+
+				if (errors) {
+					console.error("Error creating request history:", errors)
+				} else {
+					console.log("Request history created:", data.createRequestHistory)
+				}
+			} catch (error) {
+				console.error("Error executing createRequestHistory mutation:", error)
+			}
 		}
+	}
+
+	function cleanResponse(response) {
+		return response
+			.split("\n")
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0)
+			.join("\n")
 	}
 
 	const handleKeyPress = (event) => {

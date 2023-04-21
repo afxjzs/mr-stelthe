@@ -1,0 +1,17 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model RequestHistory {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  prompt     String
+  response   String
+  tokensUsed Int
+  modelName  String
+}

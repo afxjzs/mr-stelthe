@@ -1,6 +1,12 @@
 // src/utils/api.js
+import { ApolloClient, InMemoryCache } from "@apollo/client"
 
 import axios from "axios"
+
+export const client = new ApolloClient({
+	uri: "http://localhost:4000", // Change this to your GraphQL server's URL
+	cache: new InMemoryCache(),
+})
 
 export const sendRequest = async (userInput, modelName) => {
 	const apiKey = process.env.REACT_APP_CHATGPT_API_KEY
